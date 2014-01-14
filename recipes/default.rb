@@ -24,6 +24,10 @@ node.download_make_install.packages.each do |entry|
     entry = {:url => entry}
   end
 
+  if entry[:url].is_a? Proc
+    entry[:url] = entry[:url].call
+  end
+
   download_make_install entry[:url] do
     install_prefix node.download_make_install.install_prefix
     [:target, :env, :configure_options, :configure_command, :make_command, :install_command].each do |key|

@@ -15,7 +15,14 @@ Attributes
 #### download-make-install::default
 
 `node['download_make_install']['install_prefix']` - install path prefix: default is '/usr/local'
-`node['download_make_install']['packages']` - build target source definitions hash-array. hash include few keys. `url` is target source file location, required. `configure_options` value will pass-through to ./configure option, optional. `target` is expected installed file/directory after installation, optional. if `target` is omitted then try to download/install everytime.
+`node['download_make_install']['packages']` - build target source definitions hash-array. hash include few keys.
+
+* `url` is target source file location, required.
+* `configure_options` value will pass-through to ./configure option, optional.
+* `target` is expected installed file/directory after installation, optional. if `target` is omitted then try to download/install everytime.
+* `environment` is a Hash to specify environment variables for ./configure, make and install. optional.
+* `make_command` to override the make command, optional. default: make
+* `install_command` to override the installation command, optional. default: make install
 
 Usage
 -----
@@ -45,7 +52,13 @@ Include `download_make_install` in your node's `run_list` and set packages infor
         },
         {
           "url": "http://www.sqlite.org/2013/sqlite-autoconf-3080200.tar.gz",
-          "target": "/usr/local/bin/sqlite3"
+          "target": "/usr/local/bin/sqlite3",
+          "env": 'CFLAGS="-Os"'
+        },
+        {
+          "url": "https://github.com/ariya/phantomjs/archive/1.9.zip",
+          "target": "/usr/local/bin/phantomjs",
+          "install_command": "cp bin/phantomjs /usr/local/bin/phantomjs"
         }
       ]
     }

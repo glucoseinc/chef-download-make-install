@@ -26,7 +26,10 @@ node.download_make_install.packages.each do |entry|
 
   download_make_install entry[:url] do
     install_prefix node.download_make_install.install_prefix
-    configure_options entry[:configure_options]
-    target entry[:target]
+    [:target, :env, :configure_options, :configure_command, :make_command, :install_command].each do |key|
+      if entry.include? key
+        send key, entry[key]
+      end
+    end
   end
 end

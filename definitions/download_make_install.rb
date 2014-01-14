@@ -9,7 +9,7 @@ EXT_TYPE_CMD = {
 }
 EXT_TYPES = EXT_TYPE_CMD.keys.collect{|k| [k.length, k]}.sort.reverse.collect{|n,k|k}
 
-define :download_make_install, :action => :build, :install_prefix => '/usr/local', :configure_options => nil, :target => nil do
+define :download_make_install, :action => :build, :target => nil, :environment => nil, :install_prefix => '/usr/local', :configure_options => nil, :configure_command => nil, :make_command => nil, :install_command => nil do
 
   def make_extract_command(path)
     lpath = path.downcase
@@ -39,6 +39,7 @@ define :download_make_install, :action => :build, :install_prefix => '/usr/local
     archive_url = "#{node[:download_make_install][:archive_dir]}/#{archive_file}"
   end
 
+  environment = params[:environment] or {}
   install_prefix = params[:install_prefix]
   configure_options = params[:configure_options]
   target = params[:target]
@@ -72,19 +73,22 @@ define :download_make_install, :action => :build, :install_prefix => '/usr/local
 
     execute "configure #{archive_file}" do
       cwd extract_path
-      command "./configure --prefix=#{install_prefix} #{configure_options}"
+      environment environment
+      command (params[:configure_command] or "./configure --prefix=#{install_prefix} #{configure_options}")
       not_if {File.exists?("#{extract_path}/Makefile") or (target and File.exists?(target))}
     end
 
     execute "make #{archive_file}" do
       cwd extract_path
-      command "make"
+      environment environment
+      command (params[:build_command] or "make")
       not_if {(target and File.exists?(target))}
     end
 
     execute "make install #{archive_file}" do
       cwd extract_path
-      command "make install"
+      environment environment
+      command (params[:install_command] or "make install")
       not_if {(target and File.exists?(target))}
       notifies :run, "execute[ldconfig #{archive_file}]", :immediately
     end

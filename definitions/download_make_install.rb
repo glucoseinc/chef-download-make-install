@@ -3,7 +3,7 @@ EXT_TYPE_CMD = {
   '.tgz' => ['tar', 'zxf'],
   '.tar.gz' => ['tar', 'zxf'],
   '.tar.bz2' => ['tar', 'jxf'],
-  '.zip' => ['unzip', ''],
+  '.zip' => ['unzip', '-o'],
   '.gz' => ['gzip', '-d'],
   '.bz2' => ['bzip2', '-d'],
 }

@@ -11,6 +11,17 @@ EXT_TYPES = EXT_TYPE_CMD.keys.collect{|k| [k.length, k]}.sort.reverse.collect{|n
 
 define :download_make_install, :action => :build, :target => nil, :environment => nil, :install_prefix => '/usr/local', :configure_options => nil, :configure_command => nil, :make_command => nil, :install_command => nil do
 
+  chef_gem "mechanize" do
+    # latest mechanize depends on mime-types 2.0
+    # but chef requires mime-types ~1.16.
+    version "~> 2.6.0"
+    action :install
+  end
+
+  require 'mechanize'
+  agent = Mechanize.new
+  agent.pluggable_parser.default = Mechanize::Download
+
   def make_extract_command(path)
     lpath = path.downcase
     EXT_TYPES.each do |ext|
@@ -38,6 +49,9 @@ define :download_make_install, :action => :build, :target => nil, :environment =
   if node[:download_make_install][:archive_dir]
     archive_url = "#{node[:download_make_install][:archive_dir]}/#{archive_file}"
   end
+  if URI.parse(archive_url).scheme =~ /http/
+    archive_file = agent.head(archive_url).filename
+  end
 
   environment = params[:environment] or {}
   install_prefix = params[:install_prefix]
@@ -49,18 +63,13 @@ define :download_make_install, :action => :build, :target => nil, :environment =
 
   case params[:action]
   when :build
-    script "Download #{archive_file}" do
-      interpreter "ruby"
-      code <<-EOH
-        require 'open-uri'
-        open("#{archive_url}", 'rb') do |input|
-          open("#{archive_dir}/#{archive_file}", 'wb') do |output|
-            while data = input.read(8192) do
-              output.write(data)
-            end
-          end
+
+    ruby_block "Download #{archive_file}" do
+      block do
+        Dir.chdir archive_dir do
+          agent.get(archive_url).save
         end
-      EOH
+      end
 
       not_if {File.exists?("#{archive_dir}/#{archive_file}") or (target and File.exists?(target))}
     end

@@ -84,7 +84,7 @@ define :download_make_install, :action => :build, :target => nil, :environment =
       cwd extract_path
       environment environment
       command (params[:configure_command] or "./configure --prefix=#{install_prefix} #{configure_options}")
-      not_if {File.exists?("#{extract_path}/Makefile") or (target and File.exists?(target))}
+      not_if {!File.exists?("#{extract_path}/configure") or File.exists?("#{extract_path}/Makefile") or (target and File.exists?(target))}
     end
 
     execute "make #{archive_file}" do
